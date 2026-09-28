@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Problema #{{ problema['id'] }} — SOS Usabilidade</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background-color: #f0ede8; color: #2a2a2a; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 6px; border: 2px solid #aaa; box-shadow: 4px 4px 0 #bbb; }
+        h1 { font-size: 18px; text-transform: uppercase; margin-bottom: 16px; border-bottom: 2px solid #ccc; padding-bottom: 8px; }
+
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; background: #fdecea; border: 1px dashed #c55; color: #6a1a1a; }
+        .form-row { margin-bottom: 12px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; color: #555; }
+        input[type="text"], select, textarea { width: 100%; padding: 8px; font-size: 13px; border: 1.5px solid #aaa; border-radius: 3px; background: #f0f0ff; }
+        textarea { height: 90px; resize: vertical; }
+
+        .radio-group { display: flex; gap: 16px; margin-top: 6px; }
+        .radio-group label { font-weight: normal; font-size: 13px; text-transform: none; cursor: pointer; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 16px; }
+        .btn { padding: 8px 16px; border-radius: 3px; font-weight: bold; cursor: pointer; border: 1.5px solid; font-size: 12px; text-decoration: none; text-align: center; }
+        .btn-primary { background: #2a2a2a; color: #fff; border-color: #2a2a2a; }
+        .btn-secondary { background: #f0f0f0; color: #444; border-color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ Editando Problema #{{ problema['id'] }}</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert">❌ {{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('editar_problema', id=problema['id']) }}" method="POST">
+            <div class="form-row">
+                <label for="titulo">Título *</label>
+                <input type="text" id="titulo" name="titulo" value="{{ problema['titulo'] }}" maxlength="120" required>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-row">
+                    <label for="sistema">Sistema *</label>
+                    <input type="text" id="sistema" name="sistema" value="{{ problema['sistema'] }}" required>
+                </div>
+                <div class="form-row">
+                    <label for="categoria">Categoria *</label>
+                    <select id="categoria" name="categoria" required>
+                        <option value="navegacao" {% if problema['categoria'] == 'navegacao' %}selected{% endif %}>Navegação</option>
+                        <option value="formulario" {% if problema['categoria'] == 'formulario' %}selected{% endif %}>Formulário</option>
+                        <option value="feedback" {% if problema['categoria'] == 'feedback' %}selected{% endif %}>Feedback</option>
+                        <option value="acessibilidade" {% if problema['categoria'] == 'acessibilidade' %}selected{% endif %}>Acessibilidade</option>
+                        <option value="outro" {% if problema['categoria'] == 'outro' %}selected{% endif %}>Outro</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Gravidade *</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="gravidade" value="baixa" {% if problema['gravidade'] == 'baixa' %}checked{% endif %} required> Baixa</label>
+                    <label><input type="radio" name="gravidade" value="media" {% if problema['gravidade'] == 'media' %}checked{% endif %} required> Média</label>
+                    <label><input type="radio" name="gravidade" value="alta" {% if problema['gravidade'] == 'alta' %}checked{% endif %} required> Alta</label>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="descricao">Descrição *</label>
+                <textarea id="descricao" name="descricao" required>{{ problema['descricao'] }}</textarea>
+            </div>
+
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">💾 Salvar alterações</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">← Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

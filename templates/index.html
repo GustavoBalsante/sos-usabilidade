@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOS Usabilidade — Painel de Problemas</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background-color: #f0ede8; color: #2a2a2a; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 6px; border: 2px solid #aaa; box-shadow: 4px 4px 0 #bbb; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 12px; margin-bottom: 20px; }
+        h1 { font-size: 20px; text-transform: uppercase; }
+        .badge-count { background: #333; color: #fff; padding: 4px 8px; border-radius: 12px; font-size: 12px; }
+
+        .alert { padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; font-weight: bold; border: 1.5px dashed; }
+        .alert-success { background-color: #e8f5e8; border-color: #5a9; color: #2a6a3a; }
+        .alert-error { background-color: #fdecea; border-color: #c55; color: #6a1a1a; }
+
+        .section-box { border: 1.5px solid #ccc; border-radius: 4px; margin-bottom: 24px; overflow: hidden; }
+        .section-title { background: #e8e8e8; padding: 8px 12px; font-size: 12px; font-weight: bold; text-transform: uppercase; border-bottom: 1.5px solid #ccc; }
+        .section-body { padding: 16px; }
+
+        .form-row { margin-bottom: 12px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; color: #555; }
+        input[type="text"], select, textarea { width: 100%; padding: 8px; font-size: 13px; border: 1.5px solid #aaa; border-radius: 3px; background: #f8f8f8; }
+        textarea { height: 70px; resize: vertical; }
+
+        .radio-group { display: flex; gap: 16px; margin-top: 6px; }
+        .radio-group label { font-weight: normal; font-size: 13px; text-transform: none; cursor: pointer; }
+
+        .btn { padding: 8px 16px; border-radius: 3px; font-weight: bold; cursor: pointer; border: 1.5px solid; font-size: 12px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #2a2a2a; color: #fff; border-color: #2a2a2a; }
+        .btn-warning { background: #f5a623; color: #fff; border-color: #d48806; }
+        .btn-danger { background: #c44; color: #fff; border-color: #c44; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid #eee; text-align: left; vertical-align: middle; }
+        th { background: #e8e8e8; font-size: 10px; text-transform: uppercase; border-bottom: 2px solid #ccc; }
+
+        .tag { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: bold; text-transform: uppercase; border: 1px solid; }
+        .tag-alta { background: #fdecea; color: #c00; border-color: #fbb; }
+        .tag-media { background: #fff8e1; color: #b06000; border-color: #fdd; }
+        .tag-baixa { background: #e8f5e8; color: #2a6; border-color: #afa; }
+
+        .empty-state { text-align: center; padding: 30px; color: #888; font-style: italic; }
+        .action-cell { display: flex; gap: 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 SOS Usabilidade</h1>
+            <span class="badge-count">{{ problemas|length }} problemas registrados</span>
+        </header>
+
+        <!-- Trata Exibição de Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                        {{ '❌ ERRO:' if category == 'error' else '✅ SUCESSO:' }} {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Trata Exibição de Erro HTTP 404 -->
+        {% if erro_404 %}
+            <div class="alert alert-error">
+                🔍 404 — NOT FOUND: {{ erro_404 }}
+            </div>
+        {% endif %}
+
+        <!-- Form de Cadastro -->
+        <div class="section-box">
+            <div class="section-title">✏️ Registrar novo problema</div>
+            <div class="section-body">
+                <form action="{{ url_for('cadastrar_problema') }}" method="POST">
+                    <div class="form-row">
+                        <label for="titulo">Título *</label>
+                        <input type="text" id="titulo" name="titulo" maxlength="120" placeholder="Ex.: Botão de confirmar quase invisível" required>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <label for="sistema">Sistema *</label>
+                            <input type="text" id="sistema" name="sistema" placeholder="Ex.: Portal USJT, Nubank" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="categoria">Categoria *</label>
+                            <select id="categoria" name="categoria" required>
+                                <option value="" disabled selected>Selecione a categoria</option>
+                                <option value="navegacao">Navegação</option>
+                                <option value="formulario">Formulário</option>
+                                <option value="feedback">Feedback</option>
+                                <option value="acessibilidade">Acessibilidade</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Gravidade *</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="gravidade" value="baixa" required> Baixa</label>
+                            <label><input type="radio" name="gravidade" value="media" required> Média</label>
+                            <label><input type="radio" name="gravidade" value="alta" required> Alta</label>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="descricao">Descrição *</label>
+                        <textarea id="descricao" name="descricao" placeholder="Relato objetivo do problema de usabilidade..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">💾 Registrar problema</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Listagem de Problemas -->
+        <div class="section-box">
+            <div class="section-title">📋 Problemas registrados ({{ problemas|length }})</div>
+            <div class="section-body" style="padding: 0;">
+                {% if problemas %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Título</th>
+                                <th>Sistema</th>
+                                <th>Categoria</th>
+                                <th>Gravidade</th>
+                                <th>Data/Hora</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in problemas %}
+                                <tr>
+                                    <td>{{ p['id'] }}</td>
+                                    <td><strong>{{ p['titulo'] }}</strong></td>
+                                    <td>{{ p['sistema'] }}</td>
+                                    <td><span class="tag">{{ p['categoria'] }}</span></td>
+                                    <td>
+                                        <span class="tag tag-{{ p['gravidade'] }}">{{ p['gravidade'] }}</span>
+                                    </td>
+                                    <td><small>{{ p['criado_em'] }}</small></td>
+                                    <td class="action-cell">
+                                        <a href="{{ url_for('editar_problema', id=p['id']) }}" class="btn btn-warning btn-sm">✏️ Editar</a>
+                                        <form action="{{ url_for('excluir_problema', id=p['id']) }}" method="POST" onsubmit="return confirm('Deseja realmente excluir o problema #{{ p['id'] }}?');">
+                                            <button type="submit" class="btn btn-danger btn-sm">🗑️ Excluir</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <div class="empty-state">
+                        🗂️ Nenhum problema registrado ainda.<br>Use o formulário acima para começar.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
